@@ -1,4 +1,5 @@
 import numpy as np
+from helpers import position_to_coordinates
 # A 3x3 grid is placed within a larger 3x3 grid. In total, 81 squares are present.
 
 default_grid = [
@@ -16,9 +17,20 @@ class SingleTic:
     
     def non_empty_cells(self):
         return sum(cell is not None for cell in self.flatten_grid())
-
+    
+    
+    def make_move(self, grid_index, current_player):
+        assert current_player in ['X', 'O']
+        row, col = position_to_coordinates(grid_index)
+        if self.grid[row][col] is not None:
+            raise ValueError("Cell already taken")
+        self.grid[row][col] = current_player
 
     def game_result(self):
+        # Game cannot end if there are less than 3 cells filled
+        if self.non_empty_cells() < 3:
+            return 0
+        
         return self._check_winner() or self._check_draw()
 
     def _check_winner(self):
@@ -40,9 +52,9 @@ class SingleTic:
         return None
     
     def _check_draw(self):
-        if not self.check_winner() and self.non_empty_cells() == 9:
+        if not self._check_winner() and self.non_empty_cells() == 9:
             return 'D'
-        return -1
+        return 0
 
 
 
@@ -57,21 +69,12 @@ class MultiTic:
     def _flatten_big_grid(self):
         return [cell for row in self.big_grid for cell in row]
     
-    def _grid_index_to_coordinates(self, grid_index):
-        if not 0 <= grid_index <= 8:
-            raise ValueError("Grid index must be between 0 and 8")
-            
-        # Convert 1D index to 2D coordinates
-        row = grid_index // 3
-        col = grid_index % 3
-        return row, col
-    
     def replace_single_grid(self, grid_index):
         if not 0 <= grid_index <= 8:
             raise ValueError("Grid index must be between 0 and 8")
             
         # Convert 1D index to 2D coordinates
-        row, col  = self._grid_index_to_coordinates(grid_index)
+        row, col  = position_to_coordinates(grid_index)
         
         grid_to_replace = self.big_grid[row][col]
         
@@ -83,28 +86,68 @@ class MultiTic:
         return None
     
     def big_grid_result(self):
-        # Create a copy of the big grid with removed SingleTic instances to check for winner
+        # Create a copy of the big grid with removed SingleTic instances to check for winner --> review if this is correct
         check_grid = [
             [None if isinstance(cell, SingleTic) else cell for cell in row]
             for row in self.big_grid
         ]
 
+        print(check_grid)
+
         check_grid = SingleTic(check_grid)
         return check_grid.game_result()
+    
+    def make_move(self, grid_index, position, current_player):
+        big_grid_row, big_grid_col = position_to_coordinates(grid_index)
+        single_grid_act = self.big_grid[big_grid_row][big_grid_col]
+        if isinstance(single_grid_act, SingleTic):
+            single_grid_act.make_move(position, current_player)
+            # Returns next player and the next grid_index to play in
+            next_player = 'O' if current_player == 'X' else 'X'
+            next_grid_index = position
+            return next_player, next_grid_index
+        else:
+            print("Can't make a move on a finished grid")
+            return None
+        
+
+def pick_position(current_player):
+    pos = int(input(f"Pick a position, player {current_player}: "))
+    return pos
+
+
+def game_loop():
+    game = MultiTic()
+    
+    # First player who is X can move anywhere, any grid_index and positon within that grid index
+    current_player = 'X'
+    first_grid_index = 4 # middle of the big grid, so first player plays in the middle tic tac toe grid
+    first_position = pick_position(current_player)
+    print(f"Player {current_player} making move in grid {first_grid_index} at position {first_position}")
+    
+    next_player, next_grid_index = game.make_move(first_grid_index, first_position, current_player)
+    
+    while True:
+        # The game loop
+        # See if the grid that the player played in can be replaced by a result from the singular tic tac toe grid
+        game.replace_single_grid(next_grid_index)
+
+        # Second player who is 0 moves in the grid_index corresponding to the previous player's position
+        # Next player moves in the grid_index corresponding to the previous player's position
+        picked_position = pick_position(next_player)
+        print(f"Player {next_player} making move in grid {next_grid_index} at position {picked_position}")
+        next_player, next_grid_index = game.make_move(next_grid_index, picked_position, next_player)
+
+        # Check to see if that grid can be evaluted for a winner
+        if game.big_grid_result():
+            print(f"Game over, {next_player} wins!")
+            break
+
+        if game.big_grid_result() == 'D':
+            print("Game over, draw!")
+            break
+
         
     
-
-
-class Game:
-    def __init__(self):
-        pass
-
-        
-    def make_move(self, x):
-        pass
-
-    def exists_valid_move(self, x):
-        return True
-
-
-example = MultiTic()
+if __name__ == "__main__":
+    game_loop()
