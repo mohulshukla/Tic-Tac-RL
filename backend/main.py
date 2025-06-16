@@ -163,10 +163,3 @@ def game_loop():
 if __name__ == "__main__":
     game_loop()
 
-
-
-# TODOS
-'''
-Need to improve what happens when a single grid is finished. Where does the next player move?
-
-'''
