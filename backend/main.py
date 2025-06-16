@@ -54,16 +54,24 @@ class MultiTic:
             [SingleTic() for _ in range(3)]
         ]
 
-    def flatten_big_grid(self):
+    def _flatten_big_grid(self):
         return [cell for row in self.big_grid for cell in row]
     
-    def replace_single_grid(self, grid_index):
+    def _grid_index_to_coordinates(self, grid_index):
         if not 0 <= grid_index <= 8:
             raise ValueError("Grid index must be between 0 and 8")
             
         # Convert 1D index to 2D coordinates
         row = grid_index // 3
         col = grid_index % 3
+        return row, col
+    
+    def replace_single_grid(self, grid_index):
+        if not 0 <= grid_index <= 8:
+            raise ValueError("Grid index must be between 0 and 8")
+            
+        # Convert 1D index to 2D coordinates
+        row, col  = self._grid_index_to_coordinates(grid_index)
         
         grid_to_replace = self.big_grid[row][col]
         
@@ -84,7 +92,7 @@ class MultiTic:
         check_grid = SingleTic(check_grid)
         return check_grid.game_result()
         
-        
+    
 
 
 class Game:
