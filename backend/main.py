@@ -115,6 +115,10 @@ def pick_position(current_player):
     pos = int(input(f"Pick a position, player {current_player}: "))
     return pos
 
+def pick_grid_index(current_player):
+    pos = int(input(f"Pick a new grid index, player {current_player}: "))
+    return pos
+
 
 def game_loop():
     game = MultiTic()
@@ -147,7 +151,22 @@ def game_loop():
             print("Game over, draw!")
             break
 
+        # If the next game index is already filled, then the player has to pick a new grid index
+        row, col = position_to_coordinates(next_grid_index)
+        if not isinstance(game.big_grid[row][col], SingleTic):
+           next_grid_index = pick_grid_index(next_player)
+            
+
+
         
     
 if __name__ == "__main__":
     game_loop()
+
+
+
+# TODOS
+'''
+Need to improve what happens when a single grid is finished. Where does the next player move?
+
+'''
