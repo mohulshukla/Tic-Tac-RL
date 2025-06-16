@@ -173,8 +173,8 @@ export default function Home() {
           {gameWinner 
             ? `Winner: ${gameWinner === 'D' ? 'Draw!' : gameWinner}`
             : nextGridIndex === null
-              ? `Next player: ${currentPlayer} (Pick any available grid)`
-              : `Next player: ${currentPlayer}`}
+              ? `Current player: ${currentPlayer} (Pick any available grid)`
+              : `Current player: ${currentPlayer}`}
         </div>
         
         <div className="grid grid-cols-3 gap-4">
