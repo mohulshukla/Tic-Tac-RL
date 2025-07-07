@@ -11,7 +11,6 @@ import numpy as np
 from backend.helpers import position_to_coordinates
 import random
 from backend.rl.single_tic import SingleTic
-from backend.rl.value_iter import simulate_game
 
 class PolicyIteration:
     def __init__(self):
@@ -224,7 +223,7 @@ def main():
     pi = PolicyIteration()
     policy = pi.run_policy_iteration()
 
-    simulate_game(policy)
+    SingleTic.simulate_game(policy)
 
 
 if __name__ == "__main__":

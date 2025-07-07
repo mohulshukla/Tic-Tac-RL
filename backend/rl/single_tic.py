@@ -97,3 +97,139 @@ class SingleTic:
             # This shouldn't happen in a valid game
             raise ValueError(f"Invalid game state: X={x_count}, O={o_count}")
 
+    @classmethod
+    def simulate_game(cls, policy):
+        """
+        Interactive game where human plays against the optimal AI policy
+        """
+        print("Welcome to Tic-Tac-Toe vs Optimal AI!")
+        print("="*40)
+        
+        # Let human choose their symbol
+        while True:
+            human_choice = input("Do you want to play as X or O? (X/O): ").upper().strip()
+            if human_choice in ['X', 'O']:
+                break
+            print("Please enter X or O")
+        
+        ai_choice = 'O' if human_choice == 'X' else 'X'
+        print(f"\nYou are {human_choice}, AI is {ai_choice}")
+        print("Positions are numbered 0-8:")
+        print("0 | 1 | 2")
+        print("---------") 
+        print("3 | 4 | 5")
+        print("---------")
+        print("6 | 7 | 8")
+        print()
+        
+        def print_board(grid):
+            """Print the current board in a nice format"""
+            print("\nCurrent board:")
+            for i in range(3):
+                row_str = ""
+                for j in range(3):
+                    cell = grid[i][j]
+                    if cell is None:
+                        cell = " "
+                    row_str += f" {cell} "
+                    if j < 2:
+                        row_str += "|"
+                print(row_str)
+                if i < 2:
+                    print("-----------")
+            print()
+        
+        def get_human_move(game):
+            """Get a valid move from the human player"""
+            while True:
+                try:
+                    print(f"Your turn ({human_choice})!")
+                    move = int(input("Enter position (0-8): "))
+                    
+                    if move < 0 or move > 8:
+                        print("Position must be between 0-8")
+                        continue
+                    
+                    row, col = position_to_coordinates(move)
+                    if game.grid[row][col] is not None:
+                        print("That position is already taken!")
+                        continue
+                    
+                    return move
+                    
+                except ValueError:
+                    print("Please enter a valid number (0-8)")
+        
+        def get_ai_move(game, policy):
+            """Get the optimal move from the AI"""
+            state_key = game.get_state_key()
+            
+            if state_key in policy:
+                ai_move = policy[state_key]
+                print(f"AI ({ai_choice}) chooses position {ai_move}")
+                return ai_move
+            else:
+                # This shouldn't happen with a complete policy, but just in case
+                print("AI couldn't find optimal move, choosing randomly...")
+                valid_moves = []
+                for i in range(9):
+                    row, col = position_to_coordinates(i)
+                    if game.grid[row][col] is None:
+                        valid_moves.append(i)
+                if valid_moves:
+                    import random
+                    return random.choice(valid_moves)
+                return None
+        
+        # Initialize game and start playing
+        game = cls()
+        print_board(game.grid)
+        
+        # Game loop
+        while game.game_result() is None:
+            current_player = game.get_current_player(game.get_state_key())
+            
+            if current_player == human_choice:
+                # Human's turn
+                move = get_human_move(game)
+                game.make_move(move, current_player)
+            else:
+                # AI's turn
+                move = get_ai_move(game, policy)
+                if move is not None:
+                    game.make_move(move, current_player)
+                else:
+                    print("No valid moves available!")
+                    break
+            
+            print_board(game.grid)
+        
+        # Announce the result
+        result = game.game_result()
+        print("="*40)
+        print("GAME OVER!")
+        
+        if result == human_choice:
+            print("🎉 Congratulations! You won!")
+            print("(This shouldn't happen if the AI is truly optimal...)")
+        elif result == ai_choice:
+            print("🤖 AI wins! The optimal strategy prevails!")
+        elif result == 'D':
+            print("🤝 It's a draw! Well played against the optimal strategy!")
+        else:
+            print("Game ended unexpectedly")
+        
+        print("="*40)
+        
+        # Ask if they want to play again
+        while True:
+            play_again = input("Want to play again? (y/n): ").lower().strip()
+            if play_again in ['y', 'yes']:
+                print("\n" + "="*50 + "\n")
+                return cls.simulate_game(policy)  # Recursive call for new game
+            elif play_again in ['n', 'no']:
+                print("Thanks for playing!")
+                return result
+            else:
+                print("Please enter y or n")
+
