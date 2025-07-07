@@ -11,6 +11,7 @@ import numpy as np
 from backend.helpers import position_to_coordinates
 import random
 from backend.rl.single_tic import SingleTic
+from backend.rl.value_iter import simulate_game
 
 class PolicyIteration:
     def __init__(self):
@@ -86,8 +87,8 @@ class PolicyIteration:
         print(f"Initialized policy for {len(self.policy)} non-terminal states")
         return self.policy
     
-    def policy_evaluation(self, gamma=0.9, theta=1e-6, max_iterations=100):
-        print("Evaluating policy...")
+    def policy_evaluation(self, gamma=0.9, theta=1e-6, max_iterations=20):
+        print("=== EVALUATING POLICY ===")
 
         # Initialize values for all states to 0
         for state in self.all_states:
@@ -125,76 +126,106 @@ class PolicyIteration:
             print(f"Iteration {iteration+1}, max change: {delta:.6f}")
 
             if delta < theta:
-                print(f"Converged after {iteration+1} iterations")
+                print(f"Policy evaluation converged after {iteration+1} iterations")
                 return iteration + 1
             
-        print(f"Policy reached maximum number of iterations: {max_iterations}")
+        print(f"Policy evaluation reached maximum number of iterations: {max_iterations}")
         return max_iterations
     
-    # The main function that runs the policy iteration algorithm and returns the optimal policy!
-    def run_policy_iteration(self, gamma=0.9, theta=1e-6, max_iterations=100):
-        print(f"Starting policy iteration on {len(self.all_states)} states...")
+    def policy_improvement(self, gamma=0.9):
+        print("=== IMPROVING POLICY ===")
+        policy_changed = False
+
+
+        for state_key in self.all_states:
+            grid = self.game_state_to_grid(state_key)
+            game = SingleTic(grid)
+            result = game.game_result()
+
+            # Skip terminal states
+            if result is not None:
+                continue
+            
+            available_actions = self.get_valid_actions(state_key)
+            current_player = self.get_current_player(state_key)
+
+            q_values = []
+            for action in available_actions:
+                next_state = self.get_next_state(state_key, action)
+                immediate_reward = self.get_reward(state_key, player="X")
+                future_value = self.values[next_state]
+                q_value = immediate_reward + gamma * future_value
+                q_values.append(q_value)
+
+            # Choose the action with the highest Q-value, depending on the current player
+            if current_player == 'X':
+                best_action = available_actions[np.argmax(q_values)]
+            else:
+                best_action = available_actions[np.argmin(q_values)]
+
+            if state_key not in self.policy or self.policy[state_key] != best_action:
+                self.policy[state_key] = best_action
+                policy_changed = True
+
+        if policy_changed:
+            print("Policy changed, continuing...")
+            return True
+        else:
+            print("Policy is stable")
+            return False
+        
+    def run_policy_iteration(self, gamma=0.9, theta=1e-6, max_iterations=20):
+        print("Running policy iteration...")
 
         # Step 1: Initialize policy randomly
         self.initialize_policy()
 
-        # Step 2: 
-        
-        # Initialize values for all states to 0
-        for state in self.all_states:
-            self.values[state] = 0.0
-
-        # Run value iteration
         for iteration in range(max_iterations):
             print(f"Iteration {iteration+1}...")
-            delta = 0.0 # Tracking maximum change in value across all states
-            
-            # At each step, we calculate the expected return of each possible action
-            # We keep the maximum over each action—this simulates an agent acting optimally at every step. 
 
-            for state_key in self.all_states:
-                old_value = self.values[state_key]
+            # Step 2: Evaluate the policy
+            evaluation_iterations = self.policy_evaluation(gamma, theta)
 
-                # Check for terminal state
-                grid = self.game_state_to_grid(state_key)
-                game = SingleTic(grid)
-                result = game.game_result()
+            # Step 3: Improve the policy
+            policy_changed = self.policy_improvement(gamma)
 
-                if result is not None:
-                    self.values[state_key] = self.get_reward(state_key, player="X")
+            # Step 4: Check for convergence
+            if not policy_changed:
+                print(f"\nPolicy iteration converged after {iteration + 1} iterations!")
+                print(f"Total policy evaluations: {iteration + 1}")
+                return self.policy
 
-                # For non-terminal states, calculate the expected return
-                else:
-                    valid_actions = self.get_valid_actions(state_key)
-                    current_player = self.get_current_player(state_key)
+        print(f"Policy iteration reached maximum number of iterations: {max_iterations}")
+        return self.policy
 
-                    action_values = []
-                    for action in valid_actions:
-                        next_state = self.get_next_state(state_key, action)
-                        future_value = self.values[next_state]
-                        total_value = self.get_reward(state_key, player='X') + gamma * future_value
 
-                        action_values.append(total_value)
 
-                    if current_player == 'X':
-                        best_value = max(action_values)
-                    else: # From Os perspective, we want to minimize the value (do the most harm to X)
-                        best_value = min(action_values)
-                    
-                    # Update the value for the current state
-                    self.values[state_key] = best_value
 
-                # Update delta
-                delta = max(delta, abs(self.values[state_key] - old_value))
-            
-            print(f"Iteration {iteration+1}, max change: {delta:.6f}")
+def test_custom():
+    print("--- TESTING CUSTOM STATE ---")
 
-            if delta < theta:
-                print(f"Converged after {iteration+1} iterations")
-                break
+    pi = PolicyIteration()
+    policy = pi.run_policy_iteration()
+    
+    # Create any test state
+    test_grid = [['X', 'O', None], 
+                ['O', None, None], 
+                [None, None, 'X']]
+    test_state = tuple(tuple(row) for row in test_grid)
 
-        return iteration + 1
+    current_player = pi.get_current_player(test_state)
 
-        
+    print(f"Optimal move for {current_player}: {policy[test_state]}")
+
 
     
+def main():
+    print("=== POLICY ITERATION ===")
+    pi = PolicyIteration()
+    policy = pi.run_policy_iteration()
+
+    simulate_game(policy)
+
+
+if __name__ == "__main__":
+    main()

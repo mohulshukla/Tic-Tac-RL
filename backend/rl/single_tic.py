@@ -2,7 +2,6 @@ import numpy as np
 from backend.helpers import position_to_coordinates
 import random
 
-
 class SingleTic:
     def __init__(self, grid=None):
         if grid is None:
