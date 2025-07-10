@@ -1,0 +1,18 @@
+import numpy as np
+from backend.helpers import position_to_coordinates
+import random
+from backend.rl.single_tic import SingleTic
+
+
+
+# Temporal Difference Learning
+class TemporalDifference:
+    def __init__(self):
+        self.game = SingleTic()
+        self.values = {}
+        self.policy = {}
+        self.episode_history = []
+        self.episode_count = 0
+
+    def run_temporal_difference(self):
+        pass
