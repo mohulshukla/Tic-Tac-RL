@@ -23,7 +23,7 @@ class MonteCarlo:
     
     def _initialize_Q_values(self):
         # Let's initialize an empty Q table, which we will populate as we encounter episodes.
-        self.Q = {} # Q(s,a) values - our main learning target
+        self.Q = {} # Q(s,a) values - our main learning target. this is from X's perspective!
         self.returns = {}  # For storing returns for each (s,a) pair
     
     
@@ -33,18 +33,80 @@ class MonteCarlo:
 
         while not game.game_result():
             state_key = game.get_state_key()
-            valid_actions = game.get_valid_actions(state_key)
 
-            if random.random() < self.epsilon:
-                action = random.choice(valid_actions)
+            current_player = game.get_current_player(state_key)
+            action = self.get_action(state_key)
+
+            # make the move
+            game.make_move(action, current_player)
+            episode.append((state_key, action, current_player))
+        
+        # Assign reward based on final outcome
+        final_reward = self._get_final_reward(game, episode)
+        return episode, final_reward
+    
+    def update_Q_values(self, episode, final_reward):
+        """Update Q-values using returns from the episode"""
+        
+        # Calculate returns for each step (working backwards)
+        returns = []
+        G = 0  # Return starts at 0 and works backward
+        
+         # Work backwards through episode to calculate discounted returns
+        for i in reversed(range(len(episode))):
+            state_key, action, player = episode[i]
+            
+            # For the last step, G = final_reward (adjusted for player)
+            # For earlier steps, G = gamma * G (discounted future return)
+            if i == len(episode) - 1:
+                # Final reward, adjusted for player perspective
+                G = final_reward 
+            else:
+                G = self.gamma * G
+            
+            returns.insert(0, G)  # Insert at beginning to maintain order
+        
+        # Update Q-values using the calculated returns
+        for i, (state_key, action, player) in enumerate(episode):
+            # Get current Q-value
+            current_q = self._get_Q_value(state_key, action)
+            
+            # Update using incremental average: Q = Q + α[G - Q]
+            new_q = current_q + self.alpha * (returns[i] - current_q)
+            self._set_Q_value(state_key, action, new_q)
+
+
+
+    def _get_final_reward(self, game, episode):
+        # Get the final reward based on the game result
+        result = game.game_result()
+        if result == 'X':
+            return 1
+        elif result == 'O':
+            return -1
+        else:
+            return 0
 
     
     def get_action(self, state_key):
         valid_actions = self.game.get_valid_actions(state_key)
-        if random.random() < self.epsilon: # this is the 
+        if random.random() < self.epsilon: # this is the exploration scenario
             return random.choice(valid_actions)
         else:
-            return self.policy[state_key]
+            # Get the best action for the current state, and player
+            q_values = []
+            for action in valid_actions:
+                q_value = self._get_Q_value(state_key, action)
+                q_values.append(q_value)
+            
+            current_player = self.game.get_current_player(state_key)
+
+            if current_player == 'X':
+                best_action = valid_actions[np.argmax(q_values)]
+            else:
+                best_action = valid_actions[np.argmin(q_values)]
+
+            return best_action
         
    
 
