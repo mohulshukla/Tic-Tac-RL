@@ -56,6 +56,16 @@ class SingleTic:
     def get_state_key(self):
         return tuple(tuple(row) for row in self.grid)
     
+    
+    def get_valid_actions(self, state_key):
+        grid = self.game_state_to_grid(state_key)
+        valid_actions = []
+        for i in range(9):
+            row, col = position_to_coordinates(i)
+            if grid[row][col] is None:
+                valid_actions.append(i)
+        return valid_actions
+    
     # This is a recursive function that generates all possible states of the game
     def get_all_states(self):
         all_states = set()
