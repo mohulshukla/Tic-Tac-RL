@@ -19,13 +19,44 @@ class MonteCarlo:
         self.gamma = gamma      # Discount factor
 
 
-        
-    
     def _initialize_Q_values(self):
         # Let's initialize an empty Q table, which we will populate as we encounter episodes.
         self.Q = {} # Q(s,a) values - our main learning target. this is from X's perspective!
         self.returns = {}  # For storing returns for each (s,a) pair
     
+    
+    def train(self, num_episodes=100000):
+        for episode in range(num_episodes):
+            episode, final_reward = self.generate_episode()
+            self.update_Q_values(episode, final_reward)
+            
+            self.episode_history.append(episode)
+            self.episode_count += 1
+
+            if self.episode_count % 100 == 0:
+                print(f"Episode {self.episode_count}: Reward = {final_reward}")
+        
+        self.extract_policy()
+        return self.policy
+
+
+    def extract_policy(self):
+        for state_key in self.Q:
+            if state_key not in self.policy:
+                valid_actions = self.game.get_valid_actions(state_key)
+                current_player = self.game.get_current_player(state_key)
+                
+                # Get Q-values for all valid actions
+                q_values = [self._get_Q_value(state_key, action) for action in valid_actions]
+                
+                # Choose best action based on player
+                if current_player == 'X':
+                    best_idx = np.argmax(q_values)
+                else:
+                    best_idx = np.argmin(q_values)
+                
+                self.policy[state_key] = valid_actions[best_idx]
+            
     
     def generate_episode(self):
         episode = []
@@ -108,7 +139,6 @@ class MonteCarlo:
 
             return best_action
         
-   
 
     def _get_Q_value(self, state_key, action):
         if state_key not in self.Q:
@@ -126,4 +156,11 @@ class MonteCarlo:
 
 
  
+def main():
+    mc = MonteCarlo()
+    policy = mc.train()
+    SingleTic.simulate_game(policy)
 
+
+if __name__ == "__main__":
+    main()

@@ -56,6 +56,10 @@ class SingleTic:
     def get_state_key(self):
         return tuple(tuple(row) for row in self.grid)
     
+
+    def game_state_to_grid(self, state_key):
+        return [list(row) for row in state_key]
+    
     
     def get_valid_actions(self, state_key):
         grid = self.game_state_to_grid(state_key)
