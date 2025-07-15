@@ -87,7 +87,7 @@ class MonteCarlo:
         for i in reversed(range(len(episode))):
             state_key, action, player = episode[i]
             
-            # For the last step, G = final_reward (adjusted for player)
+            # For the last step, G = final_reward 
             # For earlier steps, G = gamma * G (discounted future return)
             if i == len(episode) - 1:
                 # Final reward, adjusted for player perspective
@@ -124,7 +124,7 @@ class MonteCarlo:
         if random.random() < self.epsilon: # this is the exploration scenario
             return random.choice(valid_actions)
         else:
-            # Get the best action for the current state, and player
+            # Get the best action for the current state, and player (act greedily)
             q_values = []
             for action in valid_actions:
                 q_value = self._get_Q_value(state_key, action)

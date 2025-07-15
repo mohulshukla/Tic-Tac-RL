@@ -1,62 +1,7 @@
 import numpy as np
-from helpers import position_to_coordinates
+from backend.helpers import position_to_coordinates
+from backend.rl.single_tic import SingleTic
 # A 3x3 grid is placed within a larger 3x3 grid. In total, 81 squares are present.
-
-default_grid = [
-            [None, None, None],
-            [None, None, None],
-            [None, None, None]
-        ]
-
-class SingleTic:
-    def __init__(self, grid=default_grid):
-        self.grid = grid
-
-    def flatten_grid(self):
-        return [cell for row in self.grid for cell in row]
-    
-    def non_empty_cells(self):
-        return sum(cell is not None for cell in self.flatten_grid())
-    
-    
-    def make_move(self, grid_index, current_player):
-        assert current_player in ['X', 'O']
-        row, col = position_to_coordinates(grid_index)
-        if self.grid[row][col] is not None:
-            raise ValueError("Cell already taken")
-        self.grid[row][col] = current_player
-
-    def game_result(self):
-        # Game cannot end if there are less than 3 cells filled
-        if self.non_empty_cells() < 3:
-            return 0
-        
-        return self._check_winner() or self._check_draw()
-
-    def _check_winner(self):
-        grid = np.array(self.grid)
-        
-        # Get all possible winning lines
-        lines = [
-            *grid,                    # rows
-            *grid.T,                  # columns
-            grid.diagonal(),          # main diagonal
-            np.fliplr(grid).diagonal() # anti-diagonal
-        ]
-        
-        # Check each line for a winner
-        for line in lines:
-            if all(x == line[0] and x is not None for x in line):
-                return line[0]
-                
-        return None
-    
-    def _check_draw(self):
-        if not self._check_winner() and self.non_empty_cells() == 9:
-            return 'D'
-        return 0
-
-
 
 class MultiTic:
     def __init__(self):
@@ -92,7 +37,7 @@ class MultiTic:
             for row in self.big_grid
         ]
 
-        print(check_grid)
+        # print(check_grid)
 
         check_grid = SingleTic(check_grid)
         return check_grid.game_result()
