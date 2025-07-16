@@ -6,7 +6,7 @@ from backend.rl.single_tic import SingleTic
 
 # Temporal Difference Learning for Tic-Tac-Toe. Using the Q Learning method
 class TemporalDifference:
-    def __init__(self, epsilon=0.1, alpha=0.1, gamma=0.9):
+    def __init__(self, epsilon=0.2, alpha=0.1, gamma=0.9):
         self.game = SingleTic()
         self._initialize_Q_values()
         
@@ -75,7 +75,7 @@ class TemporalDifference:
         else:
             return 0.0
     
-    def train_full(self, iterations=100000, verbose=True):
+    def train_full(self, iterations=200000, verbose=True):
         x_wins, o_wins, draws = 0, 0, 0
         for i in range(iterations):
             game_result = self.train_episode()

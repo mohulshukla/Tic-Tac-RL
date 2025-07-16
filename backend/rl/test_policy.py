@@ -9,6 +9,11 @@ from backend.rl.dynamic_programming.value_iter import ValueIteration
 from backend.rl.dynamic_programming.policy_iter import PolicyIteration
 
 
+NOTES = """
+Temporal Difference and Monte Carlo are both model-free methods, and perform much worse than their model-based counterparts.
+
+It is possible to beat the policies given by the model-based methods, since they are not perfect and have not explored every state.
+"""
 
 def monte_carlo_policy():
     mc = MonteCarlo()
