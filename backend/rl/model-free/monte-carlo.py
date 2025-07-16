@@ -25,16 +25,28 @@ class MonteCarlo:
         self.returns = {}  # For storing returns for each (s,a) pair
     
     
-    def train(self, num_episodes=100000):
-        for episode in range(num_episodes):
+    def train(self, num_episodes=500000, verbose=True):
+
+        x_wins, o_wins, draws = 0, 0, 0
+        for episode_count in range(num_episodes):
             episode, final_reward = self.generate_episode()
             self.update_Q_values(episode, final_reward)
+
+            
+            if final_reward == 1:
+                x_wins += 1
+            elif final_reward == -1:
+                o_wins += 1
+            else:
+                draws += 1
             
             self.episode_history.append(episode)
             self.episode_count += 1
 
-            if self.episode_count % 100 == 0:
-                print(f"Episode {self.episode_count}: Reward = {final_reward}")
+            
+            if (episode_count + 1) % 1000 == 0 and verbose:
+                total = episode_count + 1
+                print(f"Episode {total}: X:{x_wins/total:.2%} O:{o_wins/total:.2%} D:{draws/total:.2%}")
         
         self.extract_policy()
         return self.policy
