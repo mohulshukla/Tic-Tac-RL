@@ -25,7 +25,7 @@ class MonteCarlo:
         self.returns = {}  # For storing returns for each (s,a) pair
     
     
-    def train(self, num_episodes=500000, verbose=True):
+    def train(self, num_episodes=100000, verbose=True):
 
         x_wins, o_wins, draws = 0, 0, 0
         for episode_count in range(num_episodes):

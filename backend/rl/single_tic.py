@@ -247,3 +247,86 @@ class SingleTic:
             else:
                 print("Please enter y or n")
 
+    @classmethod
+    def simulate_ai_game(cls, policy_X, policy_O):
+        """
+        Simulate a game between two AI policies: policy_X (for 'X') and policy_O (for 'O').
+        Logs each move and the final result, indicating which policy is making each move.
+        """
+        print("AI vs AI Tic-Tac-Toe!")
+        print("="*40)
+        print("Policy X vs Policy O")
+        print("Positions are numbered 0-8:")
+        print("0 | 1 | 2")
+        print("---------") 
+        print("3 | 4 | 5")
+        print("---------")
+        print("6 | 7 | 8")
+        print()
+
+        def print_board(grid):
+            print("\nCurrent board:")
+            for i in range(3):
+                row_str = ""
+                for j in range(3):
+                    cell = grid[i][j]
+                    if cell is None:
+                        cell = " "
+                    row_str += f" {cell} "
+                    if j < 2:
+                        row_str += "|"
+                print(row_str)
+                if i < 2:
+                    print("-----------")
+            print()
+
+        def get_ai_move(game, policy, player_label):
+            state_key = game.get_state_key()
+            if state_key in policy:
+                ai_move = policy[state_key]
+                print(f"{player_label} chooses position {ai_move}")
+                return ai_move
+            else:
+                print(f"{player_label} couldn't find optimal move, choosing randomly...")
+                valid_moves = []
+                for i in range(9):
+                    row, col = position_to_coordinates(i)
+                    if game.grid[row][col] is None:
+                        valid_moves.append(i)
+                if valid_moves:
+                    return random.choice(valid_moves)
+                return None
+
+        # Initialize game
+        game = cls()
+        print_board(game.grid)
+
+        # Game loop
+        while game.game_result() is None:
+            current_player = game.get_current_player(game.get_state_key())
+            if current_player == 'X':
+                move = get_ai_move(game, policy_X, "Policy X (X)")
+            else:
+                move = get_ai_move(game, policy_O, "Policy O (O)")
+            if move is not None:
+                game.make_move(move, current_player)
+            else:
+                print("No valid moves available!")
+                break
+            print_board(game.grid)
+
+        # Announce the result
+        result = game.game_result()
+        print("="*40)
+        print("GAME OVER!")
+        if result == 'X':
+            print("Policy X (X) wins!")
+        elif result == 'O':
+            print("Policy O (O) wins!")
+        elif result == 'D':
+            print("It's a draw between Policy X and Policy O!")
+        else:
+            print("Game ended unexpectedly")
+        print("="*40)
+        return result
+

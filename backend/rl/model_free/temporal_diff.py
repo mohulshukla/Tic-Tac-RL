@@ -75,7 +75,7 @@ class TemporalDifference:
         else:
             return 0.0
     
-    def train_full(self, iterations=100000):
+    def train_full(self, iterations=100000, verbose=True):
         x_wins, o_wins, draws = 0, 0, 0
         for i in range(iterations):
             game_result = self.train_episode()
@@ -87,9 +87,9 @@ class TemporalDifference:
                 o_wins += 1
             else:
                 draws += 1
-            
+
             # Print progress every 100 episodes
-            if (i + 1) % 100 == 0:
+            if (i + 1) % 100 == 0 and verbose:
                 total = i + 1
                 print(f"Episode {total}: X:{x_wins/total:.2%} O:{o_wins/total:.2%} D:{draws/total:.2%}")
        
