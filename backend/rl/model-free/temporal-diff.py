@@ -29,7 +29,11 @@ class TemporalDifference:
         else:
             # Get max Q-value for next state
             valid_actions = self.game.get_valid_actions(next_state_key)
-            max_next_q = max(self._get_Q_value(next_state_key, a) for a in valid_actions)
+
+            if SingleTic().get_current_player(next_state_key) == 'X':
+                max_next_q = max(self._get_Q_value(next_state_key, a) for a in valid_actions)
+            else:
+                max_next_q = min(self._get_Q_value(next_state_key, a) for a in valid_actions)
             td_target = reward + self.gamma * max_next_q
         
         new_q_value = current_q_value + self.alpha * (td_target - current_q_value)
@@ -84,8 +88,8 @@ class TemporalDifference:
             else:
                 draws += 1
             
-            # Print progress every 1k episodes
-            if (i + 1) % 1000 == 0:
+            # Print progress every 100 episodes
+            if (i + 1) % 100 == 0:
                 total = i + 1
                 print(f"Episode {total}: X:{x_wins/total:.2%} O:{o_wins/total:.2%} D:{draws/total:.2%}")
        
